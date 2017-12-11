@@ -251,4 +251,39 @@
          </action>
       </objectContribution>
    </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            defaultHandler="com.headstrong.tools.commands.SliceHandler"
+            id="com.headstrong.tools.commands.Slice"
+            name="Slice">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:org.eclipse.ui.main.menu">
+         <menu
+               id="fileMenu"
+               label="File">
+            <command
+                  commandId="com.headstrong.tools.commands.Slice"
+                  label="Slice"
+                  style="push"
+                  tooltip="Slice through this variable">
+            </command>
+         </menu>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any">
+         <command
+               commandId="com.headstrong.tools.commands.Slice"
+               label="Slice"
+               style="push"
+               tooltip="Is a tooltip">
+         </command>
+      </menuContribution>
+   </extension>
 </plugin>

@@ -600,6 +600,9 @@ public class PDG extends Graph {
 		for(GraphNode node : nodes) {
 			PDGNode pdgNode = (PDGNode)node;
 			for(AbstractVariable variableInstruction : pdgNode.definedVariables) {
+			    // Essentially, this method does a forward search from the definition of each
+			    // variable to each of the places where it's used, and adds a dependence from each
+			    // def to each use.
 				dataDependenceSearch(pdgNode, variableInstruction, pdgNode, new LinkedHashSet<PDGNode>(), null);
 				outputDependenceSearch(pdgNode, variableInstruction, pdgNode, new LinkedHashSet<PDGNode>(), null);
 			}
@@ -609,6 +612,9 @@ public class PDG extends Graph {
 		}
 	}
 
+	// Kind of a misnomer: because this kicks off {@link dataDependenceSearch}, it
+	// adds data dependencies from the entry node to all other nodes in the PDG that
+	// follows this node in the control flow graph.
 	private void createDataDependenciesFromEntryNode(PDGNode pdgNode) {
 		for(AbstractVariable variableInstruction : entryNode.definedVariables) {
 			if(pdgNode.usesLocalVariable(variableInstruction)) {

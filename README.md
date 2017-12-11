@@ -1,4 +1,87 @@
 # JDeodorant
+
+## Testing out the slicer
+
+Add the text below to a file called `HelloWorld.java`.
+Right-click a variable and choose `Slice` from the
+drop-down context menu.  You'll see a slice including that
+statement output to the console.
+
+```java
+public class HelloWorld {
+
+  private static class InnerClass {
+    public int x = 0;
+    public int y = 0;
+
+    public void doWorkWithY() {
+      y = 1;
+    }
+
+    public void doWorkWithX() {
+      x = 1;
+    }
+
+    public void changeAOnOtherObject(OtherClass otherObject) {
+      otherObject.a = 1;
+    }
+
+    public void changeBOnOtherObject(OtherClass otherObject) {
+      otherObject.b = 1;
+    }
+  }
+
+  private static class OtherClass {
+    public int a = 0;
+    public int b = 0;
+  }
+
+  public static void main(String[] args) {
+
+    // Literal string used below
+    String str = "Hello world!";
+
+    // Use some primitive values to compute other primitive values.
+    int i = 0;
+    int j = i + 1;
+
+    // The slice should include the declarations of str, i, and j.
+    System.out.println(str + j);
+
+    // A custom class. While the reference to this object will stay the same in this
+    // method, the fields on it will change. Slices should include calls to other
+    // methods that change properties on this object.
+    InnerClass obj = new InnerClass();
+
+    obj.doWorkWithX(); // this line changes the property `x`
+    obj.doWorkWithY(); // this line changes the property `y`
+
+    // When slicing to support this method, it should include a call to
+    // `doWorkWithX()`, which changes the field `x`, but not `doWorkWithY()`
+    int z = obj.x + 2;
+
+    // Create another object that gets mutated in a call to another method
+    OtherClass otherObj = new OtherClass();
+    obj.changeAOnOtherObject(otherObj);
+    obj.changeBOnOtherObject(otherObj);
+
+    // The slice should include the call to `obj.changeA...` but not
+    // `obj.changeB...`
+    System.out.println(otherObj.a);
+
+    // When an object is changed by another reference, these changes through another
+    // reference should be included in the slice
+    OtherClass refToOtherObj = otherObj;
+    refToOtherObj.b = 2;
+    System.out.println(otherObj.b);  // slice here to check
+
+  }
+
+}
+```
+
+## Original README...
+
 JDeodorant is an Eclipse plug-in that detects design problems in Java software, known as code smells, and recommends appropriate refactorings to resolve them.
 
 For the moment, the tool supports five code smells, namely **Feature Envy**, **Type/State Checking**, **Long Method**, **God Class** and **Duplicated Code**.

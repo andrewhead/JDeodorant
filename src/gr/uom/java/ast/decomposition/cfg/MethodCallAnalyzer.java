@@ -60,6 +60,9 @@ public class MethodCallAnalyzer {
 	private Set<VariableDeclarationObject> variableDeclarationsInMethod;
 	private int maximumCallGraphAnalysisDepth;
 	
+	// This class might be the ticket for finding out how to track dependencies across methods.
+	// Presumably, if this method works, we could even trace dependencies up several layers by
+	// calling this on the ancestors of a method where a slice starts.
 	public MethodCallAnalyzer(Set<AbstractVariable> definedVariables,
 			Set<AbstractVariable> usedVariables,
 			Set<String> thrownExceptionTypes,
@@ -75,6 +78,8 @@ public class MethodCallAnalyzer {
 	public void processArgumentsOfInternalMethodInvocation(ClassObject classObject, AbstractMethodDeclaration methodObject,
 			List<Expression> arguments, IMethodBinding invokedMethodBinding, AbstractVariable variable) {
 		if(methodObject != null) {
+		    // This stuff is all cache retrieval, presumably because the same methods might get
+		    // called many times, so it's good not to traverse them many times.
 			CompilationUnitCache cache = CompilationUnitCache.getInstance();
 			if(cache.containsMethodExpression(methodObject)) {
 				for(AbstractVariable usedField : cache.getUsedFieldsForMethodExpression(methodObject)) {
@@ -95,6 +100,7 @@ public class MethodCallAnalyzer {
 				}
 				thrownExceptionTypes.addAll(cache.getThrownExceptionTypesForMethodExpression(methodObject));
 			}
+			// If no past records found in the cache for this method...
 			else {
 				Set<AbstractVariable> usedVariablesBefore = new LinkedHashSet<AbstractVariable>(this.usedVariables);
 				Set<AbstractVariable> definedVariablesBefore = new LinkedHashSet<AbstractVariable>(this.definedVariables);
@@ -535,6 +541,8 @@ public class MethodCallAnalyzer {
 			}
 		}
 		else {
+		    // Is this the only place that definedVariables and usedVariables are updated?  It
+		    // looks like it!  But this only include fields on `this`, and not params, right?
 			for(PlainVariable originalField : methodObject.getDefinedFieldsThroughThisReference()) {
 				boolean alreadyContainsOriginalField = false;
 				if(variableDeclaration != null && originalField instanceof PlainVariable) {

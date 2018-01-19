@@ -3,6 +3,7 @@ package com.headstrong.tools.commands;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -43,11 +44,15 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.internal.corext.dom.ASTNodes;
+import org.eclipse.jdt.launching.IVMInstall;
+import org.eclipse.jdt.launching.JavaRuntime;
+import org.eclipse.jdt.launching.LibraryLocation;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.ide.IDE;
@@ -252,9 +257,13 @@ public class SliceHandler extends AbstractHandler {
         // https://sdqweb.ipd.kit.edu/wiki/JDT_Tutorial:_Creating_Eclipse_Java_Projects_Programmatically
         IPackageFragmentRoot packageRoot = javaExampleProject.getPackageFragmentRoot(srcFolder);
         try {
-            IClasspathEntry[] oldEntries = javaExampleProject.getRawClasspath();
-            IClasspathEntry[] newEntries = { JavaCore.newSourceEntry(packageRoot.getPath()) };
-            javaExampleProject.setRawClasspath(newEntries, null);
+            List<IClasspathEntry> entries = new ArrayList<IClasspathEntry>();
+            IVMInstall vmInstall = JavaRuntime.getDefaultVMInstall();
+            for (LibraryLocation location: JavaRuntime.getLibraryLocations(vmInstall)) {
+                entries.add(JavaCore.newLibraryEntry(location.getSystemLibraryPath(), null, null));
+            }
+            entries.add(JavaCore.newSourceEntry(packageRoot.getPath()));
+            javaExampleProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
         } catch (JavaModelException e) {
             System.out.println("Error setting class path for new project:" + e.toString());
         }
@@ -294,7 +303,19 @@ public class SliceHandler extends AbstractHandler {
             System.out.println("Error formatting file: " + e.toString());
         }
         
-        IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+        try {
+            IResource resource = exampleCu.getUnderlyingResource();
+            if (resource.getType() == IResource.FILE) {
+                IFile exampleFile = (IFile) resource;
+                IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                        .getActivePage();
+                IDE.openEditor(page, exampleFile);
+            }
+        } catch (JavaModelException e) {
+            System.out.println("Couldn't get resource for cu: " + e.toString());
+        } catch (PartInitException e) {
+            System.out.println("Couldn't open editor for file: " + e.toString());
+        }
         
         System.out.println("All finished with this method");
         return null;
